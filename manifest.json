@@ -1,6 +1,6 @@
 {
   "name": "Toggl Button",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "manifest_version": 2,
   "description": "Add Official Toggl Online Timer to Popular Web Tools",
   "background": {
@@ -78,7 +78,7 @@
       "matches": ["*://*.bitbucket.org/*"],
       "js": ["scripts/content/bitbucket.js"]
     },
-	{
+	  {
       "matches": ["*://*.github.com/*"],
       "js": ["scripts/content/github.js"]
     },
