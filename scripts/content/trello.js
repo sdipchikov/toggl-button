@@ -77,11 +77,11 @@
 	      btnText = '';
 	      alink.classList.remove('active');
 	    } else {
-		  var pid = detectProjectId();
+		  	var projectName =  $('.board-header-btn-text').textContent.trim();
 	      msg = {
 	        type: 'timeEntry',
 	        description: $('.window-title-text').textContent + " - " + $('.checklist-item-details-text', elem).textContent,
-			projectId: pid
+					projectName: projectName
 	      };
 	      btnText = '';
 	      color = '#5c5c5c';
