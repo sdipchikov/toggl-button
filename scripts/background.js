@@ -75,8 +75,10 @@ var TogglButton = {
 
 		//Create a new Project incase the projects map array doesn't already contain the requested project
 		if(timeEntry.projectName !== undefined && timeEntry.projectName != "" && (entry.time_entry.pid == null || entry.time_entry.pid == undefined)) {
-			TogglButton.createNewProject(timeEntry.projectName,timeEntry);
-			return false; //stop here until the new project is created
+			if(confirm('Toggl couldn\'t find a project called "' + timeEntry.projectName + '". Would you like to create one now ?')){
+				TogglButton.createNewProject(timeEntry.projectName,timeEntry);
+				return false; //stop here until the new project is created
+			}
 		}
 
     xhr.open("POST", TogglButton.$newApiUrl + "/time_entries", true);
