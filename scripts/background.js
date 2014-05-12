@@ -46,6 +46,9 @@ var TogglButton = {
         }
         TogglButton.$user = resp.data;
         TogglButton.$user.projectMap = projectMap;
+
+        // chrome.runtime.sendMessage({project_map: projectMap});
+
       } else if (apiUrl === TogglButton.$apiUrl) {
         TogglButton.fetchUser(TogglButton.$newApiUrl);
       }
@@ -83,7 +86,7 @@ var TogglButton = {
 
     xhr.open("POST", TogglButton.$newApiUrl + "/time_entries", true);
     xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$user.api_token + ':api_token'));
-    
+
 		// handle response
     xhr.addEventListener('load', function (e) {
       var responseData, entryId;
@@ -106,7 +109,7 @@ var TogglButton = {
     xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$user.api_token + ':api_token'));
     xhr.send();
   },
-	
+
 	//Create a New Project
 	createNewProject: function (projectName,timeEntry) {
 
@@ -160,6 +163,8 @@ var TogglButton = {
       TogglButton.createTimeEntry(request);
     } else if (request.type === 'stop') {
       TogglButton.stopTimeEntry();
+    } else if (request.type === 'get_user_data') {
+      sendResponse({user: TogglButton.$user});
     }
   }
 

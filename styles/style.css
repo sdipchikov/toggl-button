@@ -87,6 +87,16 @@
   max-width: 94%;
 }
 
+.toggl-projects-select {
+  background-color: #dbdbdb;
+  border-color: #dbdbdb;
+  height: 28px;
+  font-weight: bold;
+  margin-top: 2px;
+  margin-left: 20px;
+  margin-bottom: 0px;
+}
+
 /********* BASECAMP *********/
 .toggl-button.basecamp {
   font-size: 12px;

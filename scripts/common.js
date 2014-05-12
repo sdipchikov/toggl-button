@@ -8,9 +8,11 @@ function $(s, elem) {
 }
 
 
-function createTag(name, className, innerHTML) {
+function createTag(name, className, innerHTML, nameParam) {
   var tag = document.createElement(name);
   tag.className = className;
+  tag.id = nameParam;
+  tag.name = nameParam;
 
   if (innerHTML) {
     tag.innerHTML = innerHTML;
@@ -44,6 +46,7 @@ function invokeIfFunction(trial) {
 
 var togglbutton = {
   isStarted: false,
+  user: false,
   render: function (selector, opts, renderer) {
     chrome.extension.sendMessage({type: 'activate'}, function (response) {
       if (response.success) {
@@ -57,6 +60,15 @@ var togglbutton = {
         }
       }
     });
+  },
+
+  get_user_data: function () {
+
+    var response_up = chrome.extension.sendMessage({type: 'get_user_data'}, function (response) {
+      return response;
+    });
+
+    return response_up;
   },
 
   renderTo: function (selector, renderer) {
@@ -82,28 +94,38 @@ var togglbutton = {
       var opts, linkText, color = '';
       e.preventDefault();
 
-      if (this.isStarted) {
-        link.classList.remove('active');
-        linkText = 'Start timer';
-        opts = {type: 'stop'};
-      } else {
-        link.classList.add('active');
-        color = '#1ab351';
-        linkText = 'Stop timer';
-        opts = {
-          type: 'timeEntry',
-          projectId: invokeIfFunction(params.projectId),
-          description: invokeIfFunction(params.description),
-          projectName: invokeIfFunction(params.projectName),
-          createdWith: 'TogglButton - ' + params.className
-        };
+      var e = document.getElementById("toggl_projects_select");
+      var projectId = e.options[e.selectedIndex].value;
+      var projectName = e.options[e.selectedIndex].innerText;
+
+      if (! projectId || projectId == 'default') {
+        alert('Please select a project from the dropdown in the board header and try again.')
       }
-      chrome.extension.sendMessage(opts);
-      this.isStarted = !this.isStarted;
-      link.style.color = color;
-      if (params.buttonType !== 'minimal') {
-        link.innerHTML = linkText;
+      else {
+        if (this.isStarted) {
+          link.classList.remove('active');
+          linkText = 'Start timer';
+          opts = {type: 'stop'};
+        } else {
+          link.classList.add('active');
+          color = '#1ab351';
+          linkText = 'Stop timer';
+          opts = {
+            type: 'timeEntry',
+            projectId: projectId,
+            description: invokeIfFunction(params.description),
+            projectName: projectName,
+            createdWith: 'TogglButton - ' + params.className
+          };
+        }
+        chrome.extension.sendMessage(opts);
+        this.isStarted = !this.isStarted;
+        link.style.color = color;
+        if (params.buttonType !== 'minimal') {
+          link.innerHTML = linkText;
+        }
       }
+
       return false;
     });
 
@@ -113,11 +135,13 @@ var togglbutton = {
   }
 };
 
-
-function createOption(id, cid, clientName, projectName) {
+var createOption = function (id, cid, clientName, projectName, selected) {
   var text = '', option = document.createElement("option");
   option.setAttribute("value", id);
   option.setAttribute("data-client-id", cid);
+  if (selected) {
+    option.setAttribute('selected', 'selected');
+  }
 
   if (clientName) {
     text = clientName + ' - ';
@@ -134,16 +158,22 @@ function createOption(id, cid, clientName, projectName) {
   return option;
 }
 
-function createProjectSelect(userData, className) {
-  var clients, projectLabel, option, select = createTag('select', className);
+var createProjectSelect = function (userData, className, nameParam) {
+  var clients, projectLabel, option, select = createTag('select', className, false, nameParam);
+  var currentBoardName = $('.board-header > a').innerText;
 
-  //add an empty (default) option
-  select.appendChild(createOption("default", null, "Select a toggl project"));
+  //add  an empty (default) option
+  select.appendChild(createOption("default", null, false, "-= Select a toggl project =-"));
 
   userData.projects.forEach(function (project) {
     clients = userData.clients.filter(function (elem, index, array) { return (elem.id === project.cid); });
-    projectLabel = (clients.length > 0 ? clients[0].name + " - " : "") + project.name;
-    select.appendChild(createOption(project.id, project.cid, projectLabel));
+    projectLabel = project.name;
+
+    var selected = false;
+    if (projectLabel == currentBoardName)
+      selected = true;
+
+    select.appendChild(createOption(project.id, project.cid, (clients[0] !== undefined && clients[0].name != '' ? clients[0].name : false), projectLabel, selected));
   });
 
   return select;
