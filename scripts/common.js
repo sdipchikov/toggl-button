@@ -96,7 +96,8 @@ var togglbutton = {
 
       var e = document.getElementById("toggl_projects_select");
       var projectId = e.options[e.selectedIndex].value;
-      var projectName = e.options[e.selectedIndex].innerText;
+      // var projectName = e.options[e.selectedIndex].innerText;
+      var projectName = e.options[e.selectedIndex].dataset.projectName;
 
       if (! projectId || projectId == 'default') {
         alert('Please select a project from the dropdown in the board header and try again.')
