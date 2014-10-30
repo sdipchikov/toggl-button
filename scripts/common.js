@@ -116,7 +116,8 @@ var togglbutton = {
             projectId: projectId,
             description: invokeIfFunction(params.description),
             projectName: projectName,
-            createdWith: 'TogglButton - ' + params.className
+            createdWith: 'TogglButton - ' + params.className,
+            tags: params.tags
           };
         }
         chrome.extension.sendMessage(opts);

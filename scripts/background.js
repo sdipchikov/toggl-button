@@ -68,7 +68,8 @@ var TogglButton = {
           pid: timeEntry.projectId || null,
           billable: timeEntry.billable || false,
           duration: -(start.getTime() / 1000),
-          created_with: timeEntry.createdWith || 'TogglButton'
+          created_with: timeEntry.createdWith || 'TogglButton',
+          tags: timeEntry.tags
         }
       };
 
