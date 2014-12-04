@@ -4,7 +4,7 @@
 var TogglButton = {
   $user: null,
   $apiUrl: "https://www.toggl.com/api/v7",
-  $newApiUrl: "https://new.toggl.com/api/v8",
+  $newApiUrl: "https://www.toggl.com/api/v8",
   $sites: new RegExp([
     'asana\\.com',
     'podio\\.com',
@@ -35,8 +35,8 @@ var TogglButton = {
 
   fetchUser: function (apiUrl) {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", apiUrl + "/me?with_related_data=true", true);
-    xhr.onload = function () {
+
+    xhr.onreadystatechange = function(){
       if (xhr.status === 200) {
         var projectMap = {}, resp = JSON.parse(xhr.responseText);
         if (resp.data.projects) {
@@ -52,12 +52,31 @@ var TogglButton = {
       } else if (apiUrl === TogglButton.$apiUrl) {
         TogglButton.fetchUser(TogglButton.$newApiUrl);
       }
-    };
+    }
+
+    xhr.open("GET", apiUrl + "/me?with_related_data=true", true);
+    // xhr.onload = function () {
+    //   if (xhr.status === 200) {
+    //     var projectMap = {}, resp = JSON.parse(xhr.responseText);
+    //     if (resp.data.projects) {
+    //       resp.data.projects.forEach(function (project) {
+    //         projectMap[project.name] = project.id;
+    //       });
+    //     }
+    //     TogglButton.$user = resp.data;
+    //     TogglButton.$user.projectMap = projectMap;
+
+    //     // chrome.runtime.sendMessage({project_map: projectMap});
+
+    //   } else if (apiUrl === TogglButton.$apiUrl) {
+    //     TogglButton.fetchUser(TogglButton.$newApiUrl);
+    //   }
+    // };
+
     xhr.send();
   },
 
   createTimeEntry: function (timeEntry) {
-
     var start = new Date(),
       xhr = new XMLHttpRequest(),
       entry = {

@@ -50,7 +50,7 @@ togglbutton.render('.checklist-item-details:not(.toggl)', {observe: true}, funct
     // projectElem = $('.board-header > a'),
     projectElem = $('#toggl_projects_select'),
     titleElem = $('.window-title-text'),
-    taskElem = $('.checklist-item-details-text', elem)
+    taskElem = $('.checklist-item-details-text', elem),
     slug = document.URL.substring(document.URL.lastIndexOf('/') + 1),
     card_id = slug.substring(0, slug.indexOf('-'));
 
