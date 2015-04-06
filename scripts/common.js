@@ -175,7 +175,7 @@ var createProjectSelect = function (userData, className, nameParam) {
     if (projectLabel == currentBoardName)
       selected = true;
 
-    select.appendChild(createOption(project.id, project.cid, (clients[0] !== undefined && clients[0].name != '' ? clients[0].name : false), projectLabel, selected));
+    select.appendChild(createOption(project.id, project.cid, (clients[0] !== undefined && clients[0].name != '' ? clients[0].name : false), projectLabel.trim(), selected));
   });
 
   return select;
