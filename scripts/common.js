@@ -169,10 +169,11 @@ var createProjectSelect = function (userData, className, nameParam) {
 
   userData.projects.forEach(function (project) {
     clients = userData.clients.filter(function (elem, index, array) { return (elem.id === project.cid); });
-    projectLabel = project.name.trim();
+    var projectLabel = project.name;
+    var projectLabelTrimmed = project.name.trim();
 
     var selected = false;
-    if (projectLabel == currentBoardName)
+    if (projectLabelTrimmed == currentBoardName)
       selected = true;
 
     select.appendChild(createOption(project.id, project.cid, (clients[0] !== undefined && clients[0].name != '' ? clients[0].name : false), projectLabel, selected));
