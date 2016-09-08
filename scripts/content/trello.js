@@ -12,7 +12,7 @@ togglbutton.render('.board-header:not(.toggl)', {observe: true}, function (elem)
 
 togglbutton.render('.window-header:not(.toggl)', {observe: true}, function (elem) {
   var link, container = createTag('div', 'card-detail-item clear'),
-    titleElem = $('.window-title-text', elem),
+    titleElem = $('.window-title h2', elem),
     // projectElem = $('.board-header > a'),
     projectElem = $('#toggl_projects_select'),
     descriptionElem = $('.card-detail-item-block'),
@@ -49,7 +49,7 @@ togglbutton.render('.checklist-item-details:not(.toggl)', {observe: true}, funct
   var link,
     // projectElem = $('.board-header > a'),
     projectElem = $('#toggl_projects_select'),
-    titleElem = $('.window-title-text'),
+    titleElem = $('.window-title h2'),
     taskElem = $('.checklist-item-details-text', elem),
     slug = document.URL.substring(document.URL.lastIndexOf('/') + 1),
     card_id = slug.substring(0, slug.indexOf('-'));
