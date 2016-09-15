@@ -28,7 +28,8 @@
     "*://*.basecamp.com/*",
     "*://*.atlassian.net/*",
     "*://*.producteev.com/*",
-    "*://*.bitbucket.org/*"
+    "*://*.bitbucket.org/*",
+    "*://*.dev2.despark.com/toggl_button*"
   ],
   "icons": {
     "16": "images/icon-16.png",
@@ -76,7 +77,7 @@
       "matches": ["*://*.bitbucket.org/*"],
       "js": ["scripts/content/bitbucket.js"]
     },
-	  {
+    {
       "matches": ["*://*.github.com/*"],
       "js": ["scripts/content/github.js"]
     },

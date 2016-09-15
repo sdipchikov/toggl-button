@@ -20,6 +20,7 @@ var TogglButton = {
     'pivotaltracker\\.com',
     'producteev\\.com'].join('|')),
   $curEntryId: null,
+  $curTaskId: null,
 
   checkUrl: function (tabId, changeInfo, tab) {
     if (changeInfo.status === 'complete') {
@@ -85,29 +86,54 @@ var TogglButton = {
           description: timeEntry.description,
           wid: TogglButton.$user.default_wid,
           pid: timeEntry.projectId || null,
+          tid: timeEntry.tid || null,
           billable: timeEntry.billable || false,
           duration: -(start.getTime() / 1000),
           created_with: timeEntry.createdWith || 'TogglButton',
           tags: timeEntry.tags
         }
       };
-
-    if(timeEntry.projectName !== undefined) {
+    if (timeEntry.projectName !== undefined) {
       entry.time_entry.pid = TogglButton.$user.projectMap[timeEntry.projectName];
     }
 
-		//Create a new Project incase the projects map array doesn't already contain the requested project
-		if(timeEntry.projectName !== undefined && timeEntry.projectName != "" && (entry.time_entry.pid == null || entry.time_entry.pid == undefined)) {
-			if(confirm('Toggl couldn\'t find a project called "' + timeEntry.projectName + '". Would you like to create one now ?')){
-				TogglButton.createNewProject(timeEntry.projectName,timeEntry);
-				return false; //stop here until the new project is created
-			}
-		}
+    //Create a new Project incase the projects map array doesn't already contain the requested project
+    if (timeEntry.projectName !== undefined && timeEntry.projectName != "" && (entry.time_entry.pid == null || entry.time_entry.pid == undefined)) {
+      if (confirm('Toggl couldn\'t find a project called "' + timeEntry.projectName + '". Would you like to create one now ?')){
+        TogglButton.createNewProject(timeEntry.projectName,timeEntry);
+        return false; //stop here until the new project is created
+      }
+    }
+    
+      if (entry.time_entry.tid === null) {
+        if (timeEntry.description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) { 
+            TogglButton.checkIfTaskExistsInDatabase(timeEntry.description, entry.time_entry.pid, function(check) {
+              if (check === null || check === '') {
+                 TogglButton.createNewTask(timeEntry.description, entry.time_entry.wid, entry.time_entry.pid, function(tid) {
+                  if (tid !== null) {
+                    TogglButton.saveTaskToDatabase(timeEntry.description, entry.time_entry.pid, tid);
+                    entry.time_entry.tid = tid;
+                    TogglButton.createTimeEntryRequest(entry, xhr);
+                  }
+                });
+              } else {
+                entry.time_entry.tid = check;
+                TogglButton.createTimeEntryRequest(entry, xhr);
+              }
+            });
+        } else {
+          TogglButton.createTimeEntryRequest(entry, xhr);
+        }
+    } else {
+      TogglButton.createTimeEntryRequest(entry, xhr);
+    }
+  },
 
+  createTimeEntryRequest: function (entry, xhr) {
     xhr.open("POST", TogglButton.$newApiUrl + "/time_entries", true);
     xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$user.api_token + ':api_token'));
 
-		// handle response
+    // handle response
     xhr.addEventListener('load', function (e) {
       var responseData, entryId;
       responseData = JSON.parse(xhr.responseText);
@@ -130,38 +156,111 @@ var TogglButton = {
     xhr.send();
   },
 
-	//Create a New Project
-	createNewProject: function (projectName,timeEntry) {
+  createNewTask: function (description, wid, pid, callback) {
+    var estimation = description.match(/(\d+)(min|h|d|wk)/),
+        xhr = new XMLHttpRequest();
+    estimation = estimation[0];
 
-  	var xhr = new XMLHttpRequest();
-		var project_data = {
-		      project: {
-		        name: projectName,
-		        wid: TogglButton.$user.default_wid
-		      }
+    if (estimation.indexOf('min') !== -1) {
+      estimation = estimation.replace('min', '');
+      estimation = estimation * 60;
+    } else if (estimation.indexOf('h') !== -1) {
+      estimation = estimation.replace('h', '');
+      estimation = estimation * 3600;
+    } else if (estimation.indexOf('d') !== -1) {
+      estimation = estimation.replace('d', '');
+      estimation = estimation * 86400;
+    } else {
+      estimation = estimation.replace('wk', '');
+      estimation = estimation * 604800;
+    }
+
+    description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+  
+    var tid = null,
+      entry = {
+        task: {
+          name: description,
+          wid: wid,
+          pid: pid,
+          estimated_seconds: estimation
+        }
+      };
+
+    xhr.open("POST", TogglButton.$newApiUrl + "/tasks", true);
+    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$user.api_token + ':api_token'));
+
+    // handle response
+    xhr.addEventListener('load', function (e) {
+      var responseData, taskId;
+      responseData = JSON.parse(xhr.responseText);
+      taskId = responseData && responseData.data && responseData.data.id;
+      TogglButton.$curTaskId = taskId;
+      callback(TogglButton.$curTaskId);
+    });
+    xhr.send(JSON.stringify(entry)); 
+  },
+
+  saveTaskToDatabase: function (description, pid, tid) {
+    description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+    var xhr = new XMLHttpRequest(),
+    entry = "description="+description+"&pid="+pid+"&tid="+tid;
+    xhr.open("POST", "http://dev2.despark.com/toggl_button/insert.php", true);
+    xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == XMLHttpRequest.DONE) {
+          return xhr.responseText;
+      }
+    }
+    xhr.send(entry); 
+  },
+
+  checkIfTaskExistsInDatabase: function (description, pid, callback) {
+    description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+    var xhr = new XMLHttpRequest(),
+    entry = "description="+description+"&pid="+pid;
+    xhr.open("POST", "http://dev2.despark.com/toggl_button/select.php", true);
+    xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == XMLHttpRequest.DONE) {
+          callback(xhr.responseText);
+      }
+    }
+    xhr.send(entry);
+  },
+
+  //Create a New Project
+  createNewProject: function (projectName,timeEntry) {
+
+    var xhr = new XMLHttpRequest();
+    var project_data = {
+          project: {
+            name: projectName,
+            wid: TogglButton.$user.default_wid
+          }
     };
 
-		//POST https://www.toggl.com/api/v8/projects
+    //POST https://www.toggl.com/api/v8/projects
     xhr.open("POST", TogglButton.$newApiUrl + "/projects", true);
     xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$user.api_token + ':api_token'));
 
-		// handle response
+    // handle response
     xhr.addEventListener('load', function (e) {
       var responseData, projectId;
       responseData = JSON.parse(xhr.responseText);
       projectId = responseData && responseData.data && responseData.data.id;
 
-			if(projectId == null || projectId == undefined){
-				projectId = 0;
-			}
+      if(projectId == null || projectId == undefined){
+        projectId = 0;
+      }
 
-			TogglButton.$user.projectMap[projectName] = projectId;
+      TogglButton.$user.projectMap[projectName] = projectId;
 
-			TogglButton.createTimeEntry(timeEntry);
+      TogglButton.createTimeEntry(timeEntry);
 
     });
     xhr.send(JSON.stringify(project_data));
-	},
+  },
 
   setPageAction: function (tabId) {
     var imagePath = 'images/inactive-19.png';
