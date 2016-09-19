@@ -3,6 +3,11 @@
 "use strict";
 var TogglButton = {
   $user: null,
+  $togglApiAdminToken: null,
+  $trelloDesparkId: null,
+  $trelloApiKey: null,
+  $trelloAuthToken: null,
+  $trelloApiUrl: "https://api.trello.com/1",
   $apiUrl: "https://www.toggl.com/api/v7",
   $newApiUrl: "https://www.toggl.com/api/v8",
   $databaseUrl: "http://dev2.despark.com/toggl_button",
@@ -48,6 +53,24 @@ var TogglButton = {
         }
         TogglButton.$user = resp.data;  
         TogglButton.$user.projectMap = projectMap;
+
+        chrome.storage.sync.get({
+          savedTogglAdminAccessToken: '',
+          savedTrelloDesparkId: '',
+          savedTrelloApiKey: '',
+          savedTrelloAuthToken: '',
+          }, function(items) {
+            TogglButton.$trelloDesparkId = items.savedTrelloDesparkId;
+            TogglButton.$trelloApiKey = items.savedTrelloApiKey;
+            TogglButton.$trelloAuthToken = items.savedTrelloAuthToken;
+            for (var property in TogglButton.$user.workspaces) {
+              if (TogglButton.$user.workspaces[property].name === 'Despark' && TogglButton.$user.workspaces[property].admin === false) {
+                TogglButton.$togglApiAdminToken = items.savedAdminAccessToken;
+              } else {
+                TogglButton.$togglApiAdminToken = TogglButton.$user.api_token;
+              }
+            }
+          });
         // chrome.runtime.sendMessage({project_map: projectMap});
 
       } else if (apiUrl === TogglButton.$apiUrl) {
@@ -104,27 +127,29 @@ var TogglButton = {
         return false; //stop here until the new project is created
       }
     }
-    
       if (entry.time_entry.tid === null) {
-        if (timeEntry.description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) { 
-            TogglButton.checkIfTaskExistsInDatabase(timeEntry.description, entry.time_entry.pid, function(check) {
+        TogglButton.getTrelloBoardId(timeEntry.projectName, function (trelloBoardId) {
+          TogglButton.getTrelloCardId(trelloBoardId, timeEntry.description, function(trelloCardId) {    
+            TogglButton.checkIfTaskExistsInDatabase(trelloCardId, entry.time_entry.pid, function(check) {
               if (check === null || check === '') {
                  TogglButton.createNewTask(timeEntry.description, entry.time_entry.wid, entry.time_entry.pid, function(tid) {
                   if (tid !== null) {
-                    TogglButton.saveTaskToDatabase(timeEntry.description, entry.time_entry.pid, tid);
+                    TogglButton.saveTaskToDatabase(timeEntry.description, entry.time_entry.pid, tid, trelloCardId);
                     entry.time_entry.tid = tid;
                     TogglButton.createTimeEntryRequest(entry, xhr);
                   }
                 });
               } else {
                 entry.time_entry.tid = check;
+                TogglButton.getTask(entry.time_entry.tid, function(task){
+                  TogglButton.updateTask(timeEntry.description, task.data.estimated_seconds, task.data.name, entry.time_entry.tid);
+                });
                 TogglButton.createTimeEntryRequest(entry, xhr);
               }
             });
-        } else {
-          TogglButton.createTimeEntryRequest(entry, xhr);
-        }
-    } else {
+          });
+        });
+      } else {
       TogglButton.createTimeEntryRequest(entry, xhr);
     }
   },
@@ -156,29 +181,38 @@ var TogglButton = {
     xhr.send();
   },
 
-  createNewTask: function (description, wid, pid, callback) {
-    var estimation = description.match(/(\d+)(min|h|d|wk)/),
-        xhr = new XMLHttpRequest();
-    estimation = estimation[0];
+  convertEstimationToSeconds: function (description, callback) {
+    var estimation = 0;
 
-    if (estimation.indexOf('min') !== -1) {
-      estimation = estimation.replace('min', '');
-      estimation = estimation * 60;
-    } else if (estimation.indexOf('h') !== -1) {
-      estimation = estimation.replace('h', '');
-      estimation = estimation * 3600;
-    } else if (estimation.indexOf('d') !== -1) {
-      estimation = estimation.replace('d', '');
-      estimation = estimation * 86400;
-    } else {
-      estimation = estimation.replace('wk', '');
-      estimation = estimation * 604800;
-    }
+    if (description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) {
+      estimation = description.match(/(\d+)(min|h|d|wk)/);
+      estimation = estimation[0];
 
-    description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
-  
-    var tid = null,
-      apiToken,
+      if (estimation.indexOf('min') !== -1) {
+        estimation = estimation.replace('min', '');
+        estimation = estimation * 60;
+      } else if (estimation.indexOf('h') !== -1) {
+        estimation = estimation.replace('h', '');
+        estimation = estimation * 3600;
+      } else if (estimation.indexOf('d') !== -1) {
+        estimation = estimation.replace('d', '');
+        estimation = estimation * 86400;
+      } else {
+        estimation = estimation.replace('wk', '');
+        estimation = estimation * 604800;
+      }
+      description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+    } else if (description.match(/\s\|\s(\d+)$/) !== null) {
+      description = description.replace(/\s\|\s(\d+)$/, '');
+    } else {}
+    callback(description, estimation);
+  },
+
+  createNewTask: function (fullDescription, wid, pid, callback) {
+    var xhr = new XMLHttpRequest();
+
+    TogglButton.convertEstimationToSeconds(fullDescription, function(description, estimation) {
+      var tid = null,
       entry = {
         task: {
           name: description,
@@ -188,40 +222,82 @@ var TogglButton = {
         }
       };
 
-    chrome.storage.sync.get({
-          savedAdminAccessToken: '',
-        }, function(items) {
-          for (var property in TogglButton.$user.workspaces) {
-            if (TogglButton.$user.workspaces[property].name === 'Despark' && TogglButton.$user.workspaces[property].admin === false) {
-              apiToken = items.savedAdminAccessToken;
-            }
-            else {
-              apiToken = TogglButton.$user.api_token;
-            }
-          }
-          xhr.open("POST", TogglButton.$newApiUrl + "/tasks", true);
-          xhr.setRequestHeader('Authorization', 'Basic ' + btoa(apiToken + ':api_token'));
+      xhr.open("POST", TogglButton.$newApiUrl + "/tasks", true);
+      xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$togglApiAdminToken + ':api_token'));
 
-          // handle response
-          xhr.addEventListener('load', function (e) {
-            if (xhr.status === 200) {
-              var responseData, taskId;
-              responseData = JSON.parse(xhr.responseText);
-              taskId = responseData && responseData.data && responseData.data.id;
-              TogglButton.$curTaskId = taskId;
-              callback(TogglButton.$curTaskId);
-            } else {
-              alert(xhr.responseText);
-            }
-          });
-          xhr.send(JSON.stringify(entry)); 
-        });
+      // handle response
+      xhr.addEventListener('load', function (e) {
+        if (xhr.status === 200) {
+          var responseData, taskId;
+          responseData = JSON.parse(xhr.responseText);
+          taskId = responseData && responseData.data && responseData.data.id;
+          TogglButton.$curTaskId = taskId;
+          callback(TogglButton.$curTaskId);
+        } else {
+          alert(responseData);
+        }
+      });
+      xhr.send(JSON.stringify(entry)); 
+    });
   },
 
-  saveTaskToDatabase: function (description, pid, tid) {
-    description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+  getTask: function (tid, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", TogglButton.$newApiUrl + "/tasks/" + tid, true);
+    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$togglApiAdminToken + ':api_token'));
+
+    // handle response
+    xhr.addEventListener('load', function (e) {
+      if (xhr.status === 200) {
+        var responseData;
+        responseData = JSON.parse(xhr.responseText);
+        callback(responseData);
+      } else {
+        alert(responseData);
+      }        
+    });
+    xhr.send(); 
+  },
+
+  updateTask: function (newDescription, estimatedSeconds, oldDescription, tid) {
+    TogglButton.convertEstimationToSeconds(newDescription, function(description, estimation) {
+      if (description !== oldDescription) {
+        TogglButton.updateTaskInDatabase(description, tid);
+      }
+      if (estimation !== estimatedSeconds || description !== oldDescription) {
+        var xhr = new XMLHttpRequest(),
+          entry = {
+            task: {
+              name: description,
+              estimated_seconds: estimation
+            }
+          };
+        xhr.open("PUT", TogglButton.$newApiUrl + "/tasks/" + tid, true);
+        xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$togglApiAdminToken + ':api_token'));
+
+        // handle response
+        xhr.addEventListener('load', function (e) {
+          if (xhr.status === 200) {
+            var responseData, taskId;
+            responseData = JSON.parse(xhr.responseText);
+          } else {
+            alert(responseData);
+          }
+        });
+        xhr.send(JSON.stringify(entry));
+      }
+    });
+  },
+
+  saveTaskToDatabase: function (description, pid, tid, trelloCardId) {
+    if (description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) {
+      description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+    } else if (description.match(/\s\|\s(\d+)$/) !== null) {
+      description = description.replace(/\s\|\s(\d+)$/, '');
+    } else {}
+    
     var xhr = new XMLHttpRequest(),
-    entry = "description="+description+"&pid="+pid+"&tid="+tid;
+    entry = "description="+description+"&pid="+pid+"&tid="+tid+"&trello_card_id="+trelloCardId;
     xhr.open("POST", TogglButton.$databaseUrl + "/insert.php", true);
     xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function() {
@@ -232,10 +308,22 @@ var TogglButton = {
     xhr.send(entry); 
   },
 
-  checkIfTaskExistsInDatabase: function (description, pid, callback) {
-    description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+  updateTaskInDatabase: function (description, tid) {
     var xhr = new XMLHttpRequest(),
-    entry = "description="+description+"&pid="+pid;
+    entry = "description="+description+"&tid="+tid;
+    xhr.open("POST", TogglButton.$databaseUrl + "/update.php", true);
+    xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == XMLHttpRequest.DONE) {
+          return xhr.responseText;
+      }
+    }
+    xhr.send(entry); 
+  },
+
+  checkIfTaskExistsInDatabase: function (trelloCardId, pid, callback) {
+    var xhr = new XMLHttpRequest(),
+    entry = "trello_card_id="+trelloCardId+"&pid="+pid;
     xhr.open("POST", TogglButton.$databaseUrl + "/select.php", true);
     xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function() {
@@ -245,6 +333,60 @@ var TogglButton = {
     }
     xhr.send(entry);
   },
+
+  getTrelloBoardId: function (projectName, callback) {
+    var xhr = new XMLHttpRequest();
+
+    xhr.open("GET", TogglButton.$trelloApiUrl + "/organizations/" + TogglButton.$trelloDesparkId + "/boards?key=" + TogglButton.$trelloApiKey + "&token=" + TogglButton.$trelloAuthToken, true);
+
+    // handle response
+    xhr.addEventListener('load', function (e) {
+      if (xhr.status === 200) {
+        var responseData,
+            trelloBoardId;
+        responseData = JSON.parse(xhr.responseText);
+        for (var property in responseData) {
+            responseData[property].name = responseData[property].name.replace(/(\d+)\s\-\s/, '');
+            if (responseData[property].name == projectName) {
+              trelloBoardId = responseData[property].id;
+              break;
+            }
+        }
+        callback(trelloBoardId);
+      } else {
+        alert(responseData);
+      }        
+    });
+    xhr.send(); 
+  },
+
+getTrelloCardId: function (trelloBoardId, description, callback) {
+  if (description.match(/\s\|\s(\d+)$/) !== null) {
+      description = description.replace(/\s\|\s(\d+)$/, '');
+  }
+  var xhr = new XMLHttpRequest();
+
+  xhr.open("GET", TogglButton.$trelloApiUrl + "/boards/" + trelloBoardId + "/cards?fields=name&key=" + TogglButton.$trelloApiKey + "&token=" + TogglButton.$trelloAuthToken, true);
+
+  // handle response
+  xhr.addEventListener('load', function (e) {
+    if (xhr.status === 200) {
+      var responseData,
+          trelloCardId;
+      responseData = JSON.parse(xhr.responseText);
+      for (var property in responseData) {
+          if (responseData[property].name == description) {
+            trelloCardId = responseData[property].id;
+            break;
+          }
+      }
+      callback(trelloCardId);
+    } else {
+      alert(responseData);
+    }        
+  });
+  xhr.send(); 
+},
 
   //Create a New Project
   createNewProject: function (projectName,timeEntry) {

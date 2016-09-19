@@ -1,58 +1,28 @@
 # Toggl Button Chrome extension
 
-Add Toggl one-click time tracking to popular web tools.
+Add Toggl one-click time tracking to Trello.
 
 ## Compatible services
-  - [TeamWeek][2]
-  - [Pivotal tracker][3]
-  - [Github][4]
-  - [Asana][5]
-  - [Unfuddle][6]
-  - [Gitlab][7]
-  - [Trello][8]
-  - [Worksection][9]
-  - [Redbooth][10]
-  - [Podio][11]
-  - [Basecamp][12]
-  - [JIRA][13]
-  - [Producteev][14]
-  - [Bitbucket][15]
-
-## Installing from the Web Store
-
-https://chrome.google.com/webstore/detail/toggl-button/oejgccbfbmkkpaidnkphaiaecficdnfn
+  - [Trello][2]
 
 ## Installing from Source
 
-1.  Clone the repository: `git clone git://github.com/toggl/toggl-button`
+1.  Clone the repository: `git git@github.com:sdipchikov/toggl-button.git`
 2.  Navigate to `chrome://extensions/` and enable "Developer Mode".
 3.  Choose "Load unpacked extension..."
 4.  Open the directory you just cloned and follow the prompts to install.
 
 ## Using the Button
 1.  Log in to your [Toggl][1] account and keep yourself logged in (no need to keep the tab open).
-2.  Go to your [TeamWeek][2], [Pivotal Tracker][3], [Github][4], [Asana][5], [Unfuddle][6], [Gitlab][7], [Trello][8], [Worksection][9], [Redbooth][10], [Podio][11], [Basecamp][12], [JIRA][13], [Producteev][14] or [Bitbucket][15] account and start your Toggl timer there.
+2.  Go to your [Trello][2] account, select a card and start your Toggl timer there.
 3.  To stop the current running timer:
   - press the button again
   - start another time entry inside your account.
   - go to Toggl to stop or edit your time entry.
 
-## Contributing
-Want to contribute? Great! Just fork the project, make your changes and open a [Pull Request][99]
+For futher information visit [here][3]
 
 [1]: https://www.toggl.com/
-[2]: https://teamweek.com/
-[3]: https://www.pivotaltracker.com/
-[4]: https://github.com/
-[5]: http://asana.com/
-[6]: http://unfuddle.com/
-[7]: https://gitlab.com/
-[8]: https://trello.com/
-[9]: http://worksection.com/
-[10]: https://redbooth.com/
-[11]: https://podio.com/
-[12]: https://basecamp.com/
-[13]: https://www.atlassian.com/software/jira
-[14]: https://www.producteev.com/
-[15]: https://www.bitbucket.org/
-[99]: https://github.com/toggl/toggl-button/pulls
+[2]: https://trello.com/
+[3]: http://dev2.despark.com/wiki/index.php?title=How_to_install_custom_version_of_Toggl_Button_for_Chrome
+
