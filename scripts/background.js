@@ -10,7 +10,7 @@ var TogglButton = {
   $trelloApiUrl: "https://api.trello.com/1",
   $apiUrl: "https://www.toggl.com/api/v7",
   $newApiUrl: "https://www.toggl.com/api/v8",
-  $databaseUrl: "http://dev2.despark.com/toggl_button",
+  $databaseUrl: null,
   $sites: new RegExp([
     'asana\\.com',
     'podio\\.com',
@@ -59,10 +59,12 @@ var TogglButton = {
           savedTrelloDesparkId: '',
           savedTrelloApiKey: '',
           savedTrelloAuthToken: '',
+          savedBackendUrl: '',
           }, function(items) {
             TogglButton.$trelloDesparkId = items.savedTrelloDesparkId;
             TogglButton.$trelloApiKey = items.savedTrelloApiKey;
             TogglButton.$trelloAuthToken = items.savedTrelloAuthToken;
+            TogglButton.$databaseUrl = items.savedBackendUrl;
             for (var property in TogglButton.$user.workspaces) {
               if (TogglButton.$user.workspaces[property].name === 'Despark' && TogglButton.$user.workspaces[property].admin === false) {
                 TogglButton.$togglApiAdminToken = items.savedAdminAccessToken;
@@ -127,31 +129,27 @@ var TogglButton = {
         return false; //stop here until the new project is created
       }
     }
-      if (entry.time_entry.tid === null) {
-        TogglButton.getTrelloBoardId(timeEntry.projectName, function (trelloBoardId) {
-          TogglButton.getTrelloCardId(trelloBoardId, timeEntry.description, function(trelloCardId) {    
-            TogglButton.checkIfTaskExistsInDatabase(trelloCardId, entry.time_entry.pid, function(check) {
-              if (check === null || check === '') {
-                 TogglButton.createNewTask(timeEntry.description, entry.time_entry.wid, entry.time_entry.pid, function(tid) {
-                  if (tid !== null) {
-                    TogglButton.saveTaskToDatabase(timeEntry.description, entry.time_entry.pid, tid, trelloCardId);
-                    entry.time_entry.tid = tid;
-                    TogglButton.createTimeEntryRequest(entry, xhr);
-                  }
-                });
-              } else {
-                entry.time_entry.tid = check;
-                TogglButton.getTask(entry.time_entry.tid, function(task){
-                  TogglButton.updateTask(timeEntry.description, task.data.estimated_seconds, task.data.name, entry.time_entry.tid);
-                });
-                TogglButton.createTimeEntryRequest(entry, xhr);
-              }
-            });
+      TogglButton.getTrelloBoardId(timeEntry.projectName, function (trelloBoardId) {
+        TogglButton.getTrelloCardId(trelloBoardId, timeEntry.description, function(trelloCardId) {    
+          TogglButton.checkIfTaskExistsInDatabase(trelloCardId, entry.time_entry.pid, function(check) {
+            if (check === null || check === '') {
+               TogglButton.createNewTask(timeEntry.description, entry.time_entry.wid, entry.time_entry.pid, function(tid) {
+                if (tid !== null) {
+                  TogglButton.saveTaskToDatabase(timeEntry.description, entry.time_entry.pid, tid, trelloCardId);
+                  entry.time_entry.tid = tid;
+                  TogglButton.createTimeEntryRequest(entry, xhr);
+                }
+              });
+            } else {
+              entry.time_entry.tid = check;
+              TogglButton.getTask(entry.time_entry.tid, function(task){
+                TogglButton.updateTask(timeEntry.description, task.data.estimated_seconds, task.data.name, entry.time_entry.tid);
+              });
+              TogglButton.createTimeEntryRequest(entry, xhr);
+            }
           });
         });
-      } else {
-      TogglButton.createTimeEntryRequest(entry, xhr);
-    }
+      });
   },
 
   createTimeEntryRequest: function (entry, xhr) {
