@@ -217,7 +217,6 @@ var TogglButton = {
           name: description,
           wid: wid,
           pid: pid,
-          uid: TogglButton.$user.id,
           estimated_seconds: estimation
         }
       };
@@ -269,8 +268,7 @@ var TogglButton = {
           entry = {
             task: {
               name: description,
-              estimated_seconds: estimation,
-              uid: TogglButton.$user.id
+              estimated_seconds: estimation
             }
           };
         xhr.open("PUT", TogglButton.$newApiUrl + "/tasks/" + tid, true);
