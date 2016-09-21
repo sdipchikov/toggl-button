@@ -30,7 +30,6 @@
     "*://*.atlassian.net/*",
     "*://*.producteev.com/*",
     "*://*.bitbucket.org/*",
-    "*://*.dev2.despark.com/toggl_button*",
     "storage"
   ],
   "icons": {
