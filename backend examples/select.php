@@ -1,9 +1,9 @@
 <?php
 	// This file should be saved on your server
 	$servername = '127.0.0.1';
-	$username = 'despark';
-	$password = 'WFU6Vm3C';
-	$dbname = 'toggl_button';
+	$username = 'myUserName';
+	$password = 'myPassword';
+	$dbname = 'myDatabase';
 
 	try {
 	    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);

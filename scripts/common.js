@@ -95,12 +95,21 @@ var togglbutton = {
       e.preventDefault();
 
       var e = document.getElementById("toggl_projects_select");
+      var e2 = document.getElementById("toggl_workspaces_select");
+
       var projectId = e.options[e.selectedIndex].value;
       // var projectName = e.options[e.selectedIndex].innerText;
       var projectName = e.options[e.selectedIndex].dataset.projectName;
 
+      var workspaceId = e2.options[e2.selectedIndex].value;
+      var workspaceName = e2.options[e2.selectedIndex].innerText;
+      //var workspaceName = e2.options[e2.selectedIndex].workspaceName;
+
       if (! projectId || projectId == 'default') {
         alert('Please select a project from the dropdown in the board header and try again.')
+      }
+      else if (! workspaceId || workspaceId == 'default') {
+        alert('Please select a workspace from the dropdown in the board header and try again.')
       }
       else {
         if (this.isStarted) {
@@ -114,8 +123,10 @@ var togglbutton = {
           opts = {
             type: 'timeEntry',
             projectId: projectId,
+            workspaceId: workspaceId,
             description: invokeIfFunction(params.description),
             projectName: projectName,
+            workspaceName: workspaceName,
             createdWith: 'TogglButton - ' + params.className,
             tags: params.tags
           };
@@ -137,7 +148,7 @@ var togglbutton = {
   }
 };
 
-var createOption = function (id, cid, clientName, projectName, selected) {
+var createOption = function (id, cid, clientName, projectName, workspaceName, selected) {
   var text = '', option = document.createElement("option");
   option.setAttribute("value", id);
   option.setAttribute("data-client-id", cid);
@@ -148,13 +159,17 @@ var createOption = function (id, cid, clientName, projectName, selected) {
   if (clientName) {
     text = clientName + ' - ';
   }
-  option.text = text + projectName;
-
+  
   if (projectName) {
     option.setAttribute("data-project-name", projectName);
+    option.text = text + projectName;
   }
   if (clientName) {
     option.setAttribute("data-client-name", clientName);
+  }
+  if (workspaceName) {
+    option.setAttribute("data-worksapce-name", workspaceName);
+    option.text = text + workspaceName;
   }
 
   return option;
@@ -176,7 +191,25 @@ var createProjectSelect = function (userData, className, nameParam) {
     if (projectLabelTrimmed == currentBoardName)
       selected = true;
 
-    select.appendChild(createOption(project.id, project.cid, (clients[0] !== undefined && clients[0].name != '' ? clients[0].name : false), projectLabel, selected));
+    select.appendChild(createOption(project.id, project.cid, (clients[0] !== undefined && clients[0].name != '' ? clients[0].name : false), projectLabel, false, selected));
+  });
+
+  return select;
+}
+
+var createWorkspaceSelect = function (userData, className, nameParam) {
+  var option, select = createTag('select', className, false, nameParam);
+  var currentOrganizationName = $('.board-header-btn-org-name > span').innerText.trim();
+
+  //add  an empty (default) option
+  select.appendChild(createOption("default", null, false, "-= Select a toggl workspace =-"));
+
+  userData.workspaces.forEach(function (workspace) {
+    var selected = false;
+    if (currentOrganizationName.match(workspace.name) !== null) {
+      selected = true;
+    }
+    select.appendChild(createOption(workspace.id, null, false, false, workspace.name, selected));
   });
 
   return select;
