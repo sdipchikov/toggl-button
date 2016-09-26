@@ -32,7 +32,6 @@ togglbutton.render('.window-header:not(.toggl)', {observe: true}, function (elem
     }
   }
 
-
   link = togglbutton.createTimerLink({
     className: 'trello',
     description: titleElem.innerHTML + ' | ' + card_id,
@@ -40,8 +39,23 @@ togglbutton.render('.window-header:not(.toggl)', {observe: true}, function (elem
     tags: tags,
     cardId: card_id,
   });
-
   container.appendChild(link);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "https://www.toggl.com/api/v8/me?with_related_data=true", true);
+  xhr.addEventListener('load', function (e) {
+    if (xhr.status === 200) {
+      var responseData;
+      responseData = JSON.parse(xhr.responseText);
+      var timeTrackedDiv = togglbutton.createTimeTrackedDiv(responseData.data);
+      var estimationDiv = togglbutton.createEstimationDiv(responseData.data);
+      container.appendChild(timeTrackedDiv);
+      container.appendChild(estimationDiv);
+    } else {
+      alert(responseData);
+    }        
+  });
+  xhr.send(); 
   descriptionElem.parentNode.insertBefore(container, descriptionElem);
 });
 

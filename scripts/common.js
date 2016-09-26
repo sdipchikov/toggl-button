@@ -37,6 +37,23 @@ function createLink(className, tagName, linkHref) {
   return link;
 }
 
+function convertTime(time) {
+  if (time > 60) {
+    time = time / 3600;
+    if (time < 1) {
+      time = time * 60;
+      time = time.toFixed(2);
+      time = time + 'min';
+    } else {
+      time = time.toFixed(2);
+      time = time + 'h';
+    }
+  } else {
+    time = time + 's';
+  }
+  return time;
+}
+
 function invokeIfFunction(trial) {
   if (trial instanceof Function) {
     return trial();
@@ -63,7 +80,6 @@ var togglbutton = {
   },
 
   get_user_data: function () {
-
     var response_up = chrome.extension.sendMessage({type: 'get_user_data'}, function (response) {
       return response;
     });
@@ -145,8 +161,20 @@ var togglbutton = {
     // new button created - reset state
     this.isStarted = false;
     return link;
+  },
+
+  createEstimationDiv: function (userData) {
+    var tag = createTag("div", "toggl-button-estimations", taskEstimationTimeLeft(userData), null);
+    return tag;
+  },
+
+  createTimeTrackedDiv: function (userData) {
+    var tag = createTag("div", "toggl-button-estimations", userTaskTrackedTime(userData), null);
+    return tag;
   }
 };
+
+
 
 var createOption = function (id, cid, clientName, projectName, workspaceName, selected) {
   var text = '', option = document.createElement("option");
@@ -213,4 +241,36 @@ var createWorkspaceSelect = function (userData, className, nameParam) {
   });
 
   return select;
+}
+
+var taskEstimationTimeLeft = function (userData) {
+  var timeLeft = 0;
+  var currentTask = $('.card-detail-title-assist').innerText.trim();
+  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
+
+  userData.tasks.forEach(function (task) {
+    if (currentTask.match(task.name) !== null) {
+      timeLeft = task.estimated_seconds - task.tracked_seconds;
+    }
+  });
+  return 'Left: ' + convertTime(timeLeft);
+}
+
+var userTaskTrackedTime = function (userData) {
+  var totalUserTaskTrackedTime = 0;
+  var currentTask = $('.card-detail-title-assist').innerText.trim();
+  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
+
+  userData.time_entries.forEach(function (time_entry) {
+    if (time_entry.description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) {
+      time_entry.description = time_entry.description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+    } else if (time_entry.description.match(/\s\|\s(\d+)$/) !== null) {
+      time_entry.description = time_entry.description.replace(/\s\|\s(\d+)$/, '');
+    } else {}
+
+    if (currentTask.match(time_entry.description) !== null) {
+      totalUserTaskTrackedTime += time_entry.duration;
+    }
+  });
+  return 'Worked: ' + convertTime(totalUserTaskTrackedTime);
 }
