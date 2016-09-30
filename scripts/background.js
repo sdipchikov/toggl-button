@@ -67,7 +67,7 @@ var TogglButton = {
             TogglButton.$databaseUrl = items.savedBackendUrl;
             for (var property in TogglButton.$user.workspaces) {
               if (TogglButton.$user.workspaces[property].name === 'Despark' && TogglButton.$user.workspaces[property].admin === false) {
-                TogglButton.$togglApiAdminToken = items.savedAdminAccessToken;
+                TogglButton.$togglApiAdminToken = items.savedTogglAdminAccessToken;
               } else {
                 TogglButton.$togglApiAdminToken = TogglButton.$user.api_token;
               }
@@ -130,14 +130,23 @@ var TogglButton = {
         return false; //stop here until the new project is created
       }
     }
+      
       TogglButton.getTrelloBoardId(timeEntry.projectName, function (trelloBoardId) {
         TogglButton.getTrelloCardId(trelloBoardId, timeEntry.description, function(trelloCardId) {    
           TogglButton.checkIfTaskExistsInDatabase(trelloCardId, entry.time_entry.pid, function(check) {
             if (check === null || check === '') {
-               TogglButton.createNewTask(timeEntry.description, entry.time_entry.wid, entry.time_entry.pid, function(tid) {
-                if (tid !== null) {
-                  TogglButton.saveTaskToDatabase(timeEntry.description, entry.time_entry.pid, tid, trelloCardId);
-                  entry.time_entry.tid = tid;
+              TogglButton.checkIfTaskExistsInToggl(timeEntry.description, entry.time_entry.pid, entry.time_entry.wid, function (data) {
+                if (data === null) {
+                  TogglButton.createNewTask(timeEntry.description, entry.time_entry.wid, entry.time_entry.pid, function(tid) {
+                      if (tid !== null) {
+                      TogglButton.saveTaskToDatabase(timeEntry.description, entry.time_entry.pid, tid, trelloCardId);
+                      entry.time_entry.tid = tid;
+                      TogglButton.createTimeEntryRequest(entry, xhr);
+                    }
+                  });               
+                } else {
+                  TogglButton.saveTaskToDatabase(data.name, data.pid, data.id, trelloCardId);
+                  entry.time_entry.tid = data.id;
                   TogglButton.createTimeEntryRequest(entry, xhr);
                 }
               });
@@ -200,10 +209,8 @@ var TogglButton = {
         estimation = estimation.replace('wk', '');
         estimation = estimation * 604800;
       }
-      description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
-    } else if (description.match(/\s\|\s(\d+)$/) !== null) {
-      description = description.replace(/\s\|\s(\d+)$/, '');
-    } else {}
+      description = description.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
+    }
     callback(description, estimation);
   },
 
@@ -256,6 +263,33 @@ var TogglButton = {
       }        
     });
     xhr.send(); 
+  },
+
+  checkIfTaskExistsInToggl (description, pid, wid, callback) {
+    var xhr = new XMLHttpRequest();
+    TogglButton.convertEstimationToSeconds(description, function (newDescription, estimation) {
+      xhr.open("GET", TogglButton.$newApiUrl + "/workspaces/" + wid + "/tasks", true);
+      xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$togglApiAdminToken + ':api_token'));
+
+      // handle response
+      xhr.addEventListener('load', function (e) {
+        if (xhr.status === 200) {
+          var responseData,
+              task = null;
+          responseData = JSON.parse(xhr.responseText);
+          for (var property in responseData) {
+              if (responseData[property].name == newDescription && responseData[property].pid == pid) {
+                task = responseData[property];
+                break;
+              }
+          }
+          callback(task);
+        } else {
+          alert(responseData);
+        }        
+      });
+      xhr.send(); 
+    });
   },
 
   updateTask: function (newDescription, estimatedSeconds, oldDescription, tid) {
@@ -334,6 +368,7 @@ var TogglButton = {
   },
 
   getTrelloBoardId: function (projectName, callback) {
+    projectName = projectName.replace(/(\d+)\s\-\s/, '');
     var xhr = new XMLHttpRequest();
 
     xhr.open("GET", TogglButton.$trelloApiUrl + "/organizations/" + TogglButton.$trelloDesparkId + "/boards?key=" + TogglButton.$trelloApiKey + "&token=" + TogglButton.$trelloAuthToken, true);
@@ -342,11 +377,12 @@ var TogglButton = {
     xhr.addEventListener('load', function (e) {
       if (xhr.status === 200) {
         var responseData,
+            trelloBoardName,
             trelloBoardId;
         responseData = JSON.parse(xhr.responseText);
         for (var property in responseData) {
-            responseData[property].name = responseData[property].name.replace(/(\d+)\s\-\s/, '');
-            if (responseData[property].name == projectName) {
+            trelloBoardName = responseData[property].name.replace(/(\d+)\s\-\s/, '');
+            if (trelloBoardName == projectName) {
               trelloBoardId = responseData[property].id;
               break;
             }
