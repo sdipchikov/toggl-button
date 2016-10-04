@@ -5,7 +5,6 @@ var TogglButton = {
   $user: null,
   $apiUrl: "https://www.toggl.com/api/v7",
   $newApiUrl: "https://www.toggl.com/api/v8",
-  $databaseUrl: "http://dev2.despark.com/toggl_button",
   $sites: new RegExp([
     'asana\\.com',
     'podio\\.com',
@@ -46,8 +45,9 @@ var TogglButton = {
             projectMap[project.name] = project.id;
           });
         }
-        TogglButton.$user = resp.data;  
+        TogglButton.$user = resp.data;
         TogglButton.$user.projectMap = projectMap;
+
         // chrome.runtime.sendMessage({project_map: projectMap});
 
       } else if (apiUrl === TogglButton.$apiUrl) {
@@ -178,7 +178,6 @@ var TogglButton = {
     description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
   
     var tid = null,
-      apiToken,
       entry = {
         task: {
           name: description,
@@ -188,41 +187,25 @@ var TogglButton = {
         }
       };
 
-    chrome.storage.sync.get({
-          savedAdminAccessToken: '',
-        }, function(items) {
-          for (var property in TogglButton.$user.workspaces) {
-            if (TogglButton.$user.workspaces[property].name === 'Despark' && TogglButton.$user.workspaces[property].admin === false) {
-              apiToken = items.savedAdminAccessToken;
-            }
-            else {
-              apiToken = TogglButton.$user.api_token;
-            }
-          }
-          xhr.open("POST", TogglButton.$newApiUrl + "/tasks", true);
-          xhr.setRequestHeader('Authorization', 'Basic ' + btoa(apiToken + ':api_token'));
+    xhr.open("POST", TogglButton.$newApiUrl + "/tasks", true);
+    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$user.api_token + ':api_token'));
 
-          // handle response
-          xhr.addEventListener('load', function (e) {
-            if (xhr.status === 200) {
-              var responseData, taskId;
-              responseData = JSON.parse(xhr.responseText);
-              taskId = responseData && responseData.data && responseData.data.id;
-              TogglButton.$curTaskId = taskId;
-              callback(TogglButton.$curTaskId);
-            } else {
-              alert(xhr.responseText);
-            }
-          });
-          xhr.send(JSON.stringify(entry)); 
-        });
+    // handle response
+    xhr.addEventListener('load', function (e) {
+      var responseData, taskId;
+      responseData = JSON.parse(xhr.responseText);
+      taskId = responseData && responseData.data && responseData.data.id;
+      TogglButton.$curTaskId = taskId;
+      callback(TogglButton.$curTaskId);
+    });
+    xhr.send(JSON.stringify(entry)); 
   },
 
   saveTaskToDatabase: function (description, pid, tid) {
     description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
     var xhr = new XMLHttpRequest(),
     entry = "description="+description+"&pid="+pid+"&tid="+tid;
-    xhr.open("POST", TogglButton.$databaseUrl + "/insert.php", true);
+    xhr.open("POST", "http://dev2.despark.com/toggl_button/insert.php", true);
     xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function() {
       if (xhr.readyState == XMLHttpRequest.DONE) {
@@ -236,7 +219,7 @@ var TogglButton = {
     description = description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
     var xhr = new XMLHttpRequest(),
     entry = "description="+description+"&pid="+pid;
-    xhr.open("POST", TogglButton.$databaseUrl + "/select.php", true);
+    xhr.open("POST", "http://dev2.despark.com/toggl_button/select.php", true);
     xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function() {
       if (xhr.readyState == XMLHttpRequest.DONE) {
@@ -303,11 +286,12 @@ var TogglButton = {
       sendResponse({user: TogglButton.$user});
     }
   }
+
 };
 
 chrome.pageAction.onClicked.addListener(function (tab) {
   if (TogglButton.$user === null) {
-    chrome.tabs.create({url: 'https://toggl.com/login'});
+    chrome.tabs.create({url: 'https://new.toggl.com/#login'});
   }
 });
 
