@@ -51,7 +51,7 @@ var TogglButton = {
             projectMap[project.name] = project.id;
           });
         }
-        TogglButton.$user = resp.data;  
+        TogglButton.$user = resp.data;
         TogglButton.$user.projectMap = projectMap;
 
         chrome.storage.sync.get({

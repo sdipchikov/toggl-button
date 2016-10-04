@@ -31,6 +31,7 @@ Other services will potentially be implemented in the future.
 2. Creates tasks for the selected project with/without an estimate. If your Trello card is called Login button [5h], it will create a task called Login button and giving it an estimate of 5 hours. You can use min for minutes, h for hours, d for days and wk for weeks. Remember that in Toggl estimates are always shown in hours! If you don't give an estimate (Login button), it will create only a new task without an estimate.
 3. You can update your task's name or estimate by editing the Trello card, refreshing the page and clicking the Start button.
 4. You can select different Projects and Workspaces.
+5. Shows the worked time on this card from the current user and the left time.
 
 [1]: https://www.toggl.com/
 [2]: https://trello.com/
