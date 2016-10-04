@@ -2,6 +2,8 @@
 
 Add Toggl one-click time tracking to Trello.
 
+Other services will potentially be implemented in the future.
+
 ## Compatible services
   - [Trello][2]
 
@@ -14,15 +16,21 @@ Add Toggl one-click time tracking to Trello.
 
 ## Using the Button
 1.  Log in to your [Toggl][1] account and keep yourself logged in (no need to keep the tab open).
-2.  Go to your [Trello][2] account, select a card and start your Toggl timer there.
-3.  To stop the current running timer:
+2. 	Right click on the Toggl Button extension and select the Options tab.
+3.	Fill up the blanks with appropriate data.
+4.	Make a MySQL Database with a table called tasks and columns: id, description, pid, tid and trello_card_id.
+5.	Make MySQL queries to the database. Check backend examples for more information.
+6.  Go to your [Trello][2] account, select a card and start your Toggl timer from there.
+7.  To stop the current running timer:
   - press the button again
   - start another time entry inside your account.
   - go to Toggl to stop or edit your time entry.
 
-For futher information visit [here][3]
+## What this extension does
+1. Creates time entries for tracking your work time.
+2. Creates tasks for the selected project with/without an estimate. If your Trello card is called Login button [5h], it will create a task called Login button and giving it an estimate of 5 hours. You can use min for minutes, h for hours, d for days and wk for weeks. Remember that in Toggl estimates are always shown in hours! If you don't give an estimate (Login button), it will create only a new task without an estimate.
+3. You can update your task's name or estimate by editing the Trello card, refreshing the page and clicking the Start button.
 
 [1]: https://www.toggl.com/
 [2]: https://trello.com/
-[3]: http://dev2.despark.com/wiki/index.php?title=How_to_install_custom_version_of_Toggl_Button_for_Chrome
 

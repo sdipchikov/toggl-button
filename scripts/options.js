@@ -3,13 +3,15 @@ function save_options() {
   var togglAdminAccessToken = document.getElementById('toggl-admin-access-token').value,
       trelloDesparkId = document.getElementById('trello-despark-id').value,
       trelloApiKey = document.getElementById('trello-api-key').value,
-      trelloAuthToken = document.getElementById('trello-auth-token').value;
+      trelloAuthToken = document.getElementById('trello-auth-token').value,
+      backendUrl = document.getElementById('backend-url').value;
   // save admin api token to local storage so that it can be accessed from background.js
   chrome.storage.sync.set({
     savedTogglAdminAccessToken: togglAdminAccessToken,
     savedTrelloDesparkId: trelloDesparkId,
     savedTrelloApiKey: trelloApiKey,
-    savedTrelloAuthToken: trelloAuthToken
+    savedTrelloAuthToken: trelloAuthToken,
+    savedBackendUrl: backendUrl
   }, function() {
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
@@ -29,12 +31,13 @@ function restore_options() {
     savedTrelloDesparkId: '',
     savedTrelloApiKey: '',
     savedTrelloAuthToken: '',
+    savedBackendUrl: '',
   }, function(items) {
     document.getElementById('toggl-admin-access-token').value = items.savedTogglAdminAccessToken;
     document.getElementById('trello-despark-id').value = items.savedTrelloDesparkId;
     document.getElementById('trello-api-key').value = items.savedTrelloApiKey;
     document.getElementById('trello-auth-token').value = items.savedTrelloAuthToken;
-
+    document.getElementById('backend-url').value = items.savedBackendUrl;
   });
 }
 document.addEventListener('DOMContentLoaded', restore_options);
