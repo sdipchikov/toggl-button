@@ -1,6 +1,6 @@
 <?php
 	// This file should be saved on your server
- 	$servername = '127.0.0.1';
+	$servername = '127.0.0.1';
 	$username = 'myUserName';
 	$password = 'myPassword';
 	$dbname = 'myDatabase';

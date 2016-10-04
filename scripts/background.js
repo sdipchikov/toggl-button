@@ -109,7 +109,7 @@ var TogglButton = {
         time_entry: {
           start: start.toISOString(),
           description: timeEntry.description,
-          wid: TogglButton.$user.default_wid,
+          wid: timeEntry.workspaceId || null,
           pid: timeEntry.projectId || null,
           tid: timeEntry.tid || null,
           billable: timeEntry.billable || false,
@@ -118,10 +118,11 @@ var TogglButton = {
           tags: timeEntry.tags
         }
       };
+  
     if (timeEntry.projectName !== undefined) {
       entry.time_entry.pid = TogglButton.$user.projectMap[timeEntry.projectName];
     }
-
+    
     //Create a new Project incase the projects map array doesn't already contain the requested project
     if (timeEntry.projectName !== undefined && timeEntry.projectName != "" && (entry.time_entry.pid == null || entry.time_entry.pid == undefined)) {
       if (confirm('Toggl couldn\'t find a project called "' + timeEntry.projectName + '". Would you like to create one now ?')){
@@ -399,7 +400,7 @@ getTrelloCardId: function (trelloBoardId, description, callback) {
 
     //POST https://www.toggl.com/api/v8/projects
     xhr.open("POST", TogglButton.$newApiUrl + "/projects", true);
-    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$user.api_token + ':api_token'));
+    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(TogglButton.$togglApiAdminToken + ':api_token'));
 
     // handle response
     xhr.addEventListener('load', function (e) {

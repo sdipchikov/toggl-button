@@ -6,7 +6,8 @@ var userData = false;
 
 togglbutton.render('.board-header:not(.toggl)', {observe: true}, function (elem) {
   chrome.extension.sendMessage({type: 'get_user_data'}, function (response) {
-    elem.appendChild(createProjectSelect(response.user, 'toggl-projects-select', 'toggl_projects_select'));
+    elem.appendChild(createWorkspaceSelect(response.user, 'toggl-select', 'toggl_workspaces_select'));
+    elem.appendChild(createProjectSelect(response.user, 'toggl-select', 'toggl_projects_select'));
   });
 });
 
