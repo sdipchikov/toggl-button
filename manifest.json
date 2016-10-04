@@ -3,7 +3,6 @@
   "version": "0.2.13",
   "manifest_version": 2,
   "description": "Add Official Toggl Online Timer to Popular Web Tools",
-  "options_page": "html/options.html",
   "background": {
     "scripts": [
       "scripts/background.js"
@@ -30,8 +29,7 @@
     "*://*.atlassian.net/*",
     "*://*.producteev.com/*",
     "*://*.bitbucket.org/*",
-    "*://*.dev2.despark.com/toggl_button*",
-    "storage"
+    "*://*.dev2.despark.com/toggl_button*"
   ],
   "icons": {
     "16": "images/icon-16.png",
