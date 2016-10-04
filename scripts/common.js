@@ -37,6 +37,16 @@ function createLink(className, tagName, linkHref) {
   return link;
 }
 
+function convertTime(time) {
+  var hours = parseInt( time / 3600 ) % 24;
+  var minutes = parseInt( time / 60 ) % 60;
+  var seconds = time % 60;
+
+  var result = (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds  < 10 ? "0" + seconds : seconds);
+
+  return result;
+}
+
 function invokeIfFunction(trial) {
   if (trial instanceof Function) {
     return trial();
@@ -63,7 +73,6 @@ var togglbutton = {
   },
 
   get_user_data: function () {
-
     var response_up = chrome.extension.sendMessage({type: 'get_user_data'}, function (response) {
       return response;
     });
@@ -145,8 +154,20 @@ var togglbutton = {
     // new button created - reset state
     this.isStarted = false;
     return link;
+  },
+
+  createEstimationDiv: function (userData) {
+    var tag = createTag("div", "toggl-button-estimations", taskEstimationTimeLeft(userData), null);
+    return tag;
+  },
+
+  createTimeTrackedDiv: function (userData) {
+    var tag = createTag("div", "toggl-button-estimations", userTaskTrackedTime(userData), null);
+    return tag;
   }
 };
+
+
 
 var createOption = function (id, cid, clientName, projectName, workspaceName, selected) {
   var text = '', option = document.createElement("option");
@@ -213,4 +234,78 @@ var createWorkspaceSelect = function (userData, className, nameParam) {
   });
 
   return select;
+}
+
+var taskEstimationTimeLeft = function (userData) {
+  var timeLeft = 0,
+      estimatedSeconds = 0,
+      trackedSeconds = 0;
+  var currentTask = $('.card-detail-title-assist').innerText.trim();
+  var currentTaskStripped = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
+
+  userData.tasks.forEach(function (task) {
+    if (currentTaskStripped.indexOf(task.name.replace(/\s\|\s(\d+)$/, "")) === 0) {
+    //if (currentTaskStripped.match(task.name.replace(/\s\|\s(\d+)$/, "")) !== null) {
+        estimatedSeconds = task.estimated_seconds;
+        trackedSeconds = task.tracked_seconds;
+    }
+  });
+  if (estimatedSeconds !== 0) {
+    if (estimatedSeconds >= trackedSeconds) {
+      timeLeft = estimatedSeconds - trackedSeconds;
+      return 'Left: ' + convertTime(timeLeft);
+    } else {
+      timeLeft = trackedSeconds - estimatedSeconds;
+      return 'Overdone: ' + convertTime(timeLeft);
+    }
+  } else {
+    if (currentTask.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) {
+      timeLeft = currentTask.match(/\s\[(\d+)(min|h|d|wk)\]/);
+      timeLeft = timeLeft[1] + timeLeft[2]
+      
+      if (timeLeft.indexOf('min') !== -1) {
+        timeLeft = timeLeft.replace('min', '');
+        timeLeft = timeLeft * 60;
+      } else if (timeLeft.indexOf('h') !== -1) {
+        timeLeft = timeLeft.replace('h', '');
+        timeLeft = timeLeft * 3600;
+      } else if (timeLeft.indexOf('d') !== -1) {
+        timeLeft = timeLeft.replace('d', '');
+        timeLeft = timeLeft * 86400;
+      } else {
+        timeLeft = timeLeft.replace('wk', '');
+        timeLeft = timeLeft * 604800;
+      }
+      return 'Left: ' + convertTime(timeLeft);
+    } else {
+      return 'No Estimation';
+    }
+  }
+}
+
+var userTaskTrackedTime = function (userData) {
+  var totalUserTaskTrackedTime = 0;
+  var timeEntryDescription;
+  var currentTask = $('.card-detail-title-assist').innerText.trim();
+  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
+
+  userData.time_entries.forEach(function (time_entry) {
+    if (typeof time_entry.description !== 'undefined') {
+      if (time_entry.description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) {
+        timeEntryDescription = time_entry.description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
+      } else if (time_entry.description.match(/\s\|\s(\d+)$/) !== null) {
+        timeEntryDescription = time_entry.description.replace(/\s\|\s(\d+)$/, '');
+      } else {
+        timeEntryDescription = time_entry.description;
+      }
+
+      if (currentTask.indexOf(timeEntryDescription) === 0) {
+      //if (currentTask.match(timeEntryDescription) !== null) {
+        if (time_entry.duration >= 0) {
+          totalUserTaskTrackedTime += time_entry.duration;
+        }
+      }
+    } 
+  });
+  return 'Worked: ' + convertTime(totalUserTaskTrackedTime);
 }
