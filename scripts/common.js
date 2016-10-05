@@ -38,8 +38,8 @@ function createLink(className, tagName, linkHref) {
 }
 
 function convertTime(time) {
-  var hours = parseInt( time / 3600 ) % 24;
-  var minutes = parseInt( time / 60 ) % 60;
+  var hours = parseInt(time / 3600);
+  var minutes = parseInt(time / 60) % 60;
   var seconds = time % 60;
 
   var result = (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds  < 10 ? "0" + seconds : seconds);
