@@ -47,9 +47,11 @@ togglbutton.render('.window-header:not(.toggl)', {observe: true}, function (elem
     if (xhr.status === 200) {
       var responseData;
       responseData = JSON.parse(xhr.responseText);
-      var timeTrackedDiv = togglbutton.createTimeTrackedDiv(responseData.data);
+      var userTimeTrackedDiv = togglbutton.createUserTimeTrackedDiv(responseData.data);
+      var totalTimeTrackedDiv = togglbutton.createTotalTimeTrackedDiv(responseData.data);
       var estimationDiv = togglbutton.createEstimationDiv(responseData.data);
-      container.appendChild(timeTrackedDiv);
+      container.appendChild(totalTimeTrackedDiv);
+      container.appendChild(userTimeTrackedDiv);
       container.appendChild(estimationDiv);
     } else {
       alert(responseData);
