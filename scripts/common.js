@@ -37,6 +37,13 @@ function createLink(className, tagName, linkHref) {
   return link;
 }
 
+function getCardId() {
+  var slug = document.URL.substring(document.URL.lastIndexOf('/') + 1),
+  card_id = slug.substring(0, slug.indexOf('-'));
+
+  return card_id;
+}
+
 function convertTime(time) {
   var hours = parseInt(time / 3600);
   var minutes = parseInt(time / 60) % 60;
@@ -289,17 +296,16 @@ var taskEstimationTimeLeft = function (userData) {
 }
 
 var userTaskTrackedTime = function (userData) {
+  var card_id = getCardId();
   var totalUserTaskTrackedTime = 0;
   var timeEntryDescription;
   var currentTask = $('.card-detail-title-assist').innerText.trim();
-  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
+  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '')  + ' | ' + card_id;
 
   userData.time_entries.forEach(function (time_entry) {
     if (typeof time_entry.description !== 'undefined') {
       if (time_entry.description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) {
-        timeEntryDescription = time_entry.description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
-      } else if (time_entry.description.match(/\s\|\s(\d+)$/) !== null) {
-        timeEntryDescription = time_entry.description.replace(/\s\|\s(\d+)$/, '');
+        timeEntryDescription = time_entry.description.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
       } else {
         timeEntryDescription = time_entry.description;
       }
@@ -316,22 +322,19 @@ var userTaskTrackedTime = function (userData) {
 }
 
 var totalTaskTrackedTime = function (userData) {
+  var card_id = getCardId();
   var totalUserTaskTrackedTime = 0;
   var totalTaskTrackedTime = 0;
   var timeEntryDescription;
   var currentTask = $('.card-detail-title-assist').innerText.trim();
-  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
-
+  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '')  + ' | ' + card_id;
   userData.time_entries.forEach(function (time_entry) {
     if (typeof time_entry.description !== 'undefined') {
       if (time_entry.description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) {
-        timeEntryDescription = time_entry.description.replace(/\s\[(\d+)(min|h|d|wk)\]\s\|\s(\d+)$/, '');
-      } else if (time_entry.description.match(/\s\|\s(\d+)$/) !== null) {
-        timeEntryDescription = time_entry.description.replace(/\s\|\s(\d+)$/, '');
+        timeEntryDescription = time_entry.description.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
       } else {
         timeEntryDescription = time_entry.description;
       }
-
       if (currentTask.indexOf(timeEntryDescription) === 0) {
       //if (currentTask.match(timeEntryDescription) !== null) {
         if (time_entry.duration >= 0) {
