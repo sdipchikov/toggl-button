@@ -323,26 +323,10 @@ var userTaskTrackedTime = function (userData) {
 
 var totalTaskTrackedTime = function (userData) {
   var card_id = getCardId();
-  var totalUserTaskTrackedTime = 0;
   var totalTaskTrackedTime = 0;
   var timeEntryDescription;
   var currentTask = $('.card-detail-title-assist').innerText.trim();
   currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '')  + ' | ' + card_id;
-  userData.time_entries.forEach(function (time_entry) {
-    if (typeof time_entry.description !== 'undefined') {
-      if (time_entry.description.match(/\s\[(\d+)(min|h|d|wk)\]/) !== null) {
-        timeEntryDescription = time_entry.description.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
-      } else {
-        timeEntryDescription = time_entry.description;
-      }
-      if (currentTask.indexOf(timeEntryDescription) === 0) {
-      //if (currentTask.match(timeEntryDescription) !== null) {
-        if (time_entry.duration >= 0) {
-          totalUserTaskTrackedTime += time_entry.duration;
-        }
-      }
-    } 
-  });
 
   userData.tasks.forEach(function (task) {
     if (currentTask.indexOf(task.name.replace(/\s\|\s(\d+)$/, "")) === 0) {
