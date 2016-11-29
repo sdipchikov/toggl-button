@@ -106,6 +106,10 @@ var togglbutton = {
       link.removeChild(link.firstChild);
     }
 
+    if (params.description.match(/\[(bug)\]/ig) !== null) {
+        params.tags = ["Bug"];
+    }
+
     link.addEventListener('click', function (e) {
       var opts, linkText, color = '';
       e.preventDefault();
