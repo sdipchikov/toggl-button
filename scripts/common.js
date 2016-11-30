@@ -257,10 +257,12 @@ var taskEstimationTimeLeft = function (userData) {
       estimatedSeconds = 0,
       trackedSeconds = 0;
   var currentTask = $('.card-detail-title-assist').innerText.trim();
-  var currentTaskStripped = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '');
+  var cardId = getCardId();
+  var currentTaskStripped = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '') + ' | ' + cardId;
 
   userData.tasks.forEach(function (task) {
-    if (currentTaskStripped.indexOf(task.name.replace(/\s\|\s(\d+)$/, "")) === 0) {
+    // if (currentTaskStripped.indexOf(task.name.replace(/\s\|\s(\d+)$/, "")) === 0) {
+    if (currentTaskStripped.indexOf(task.name) === 0) {
     //if (currentTaskStripped.match(task.name.replace(/\s\|\s(\d+)$/, "")) !== null) {
         estimatedSeconds = task.estimated_seconds;
         trackedSeconds = task.tracked_seconds;
@@ -300,11 +302,11 @@ var taskEstimationTimeLeft = function (userData) {
 }
 
 var userTaskTrackedTime = function (userData) {
-  var card_id = getCardId();
+  var  cardId = getCardId();
   var totalUserTaskTrackedTime = 0;
   var timeEntryDescription;
   var currentTask = $('.card-detail-title-assist').innerText.trim();
-  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '')  + ' | ' + card_id;
+  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '')  + ' | ' + cardId;
 
   userData.time_entries.forEach(function (time_entry) {
     if (typeof time_entry.description !== 'undefined') {
@@ -326,14 +328,15 @@ var userTaskTrackedTime = function (userData) {
 }
 
 var totalTaskTrackedTime = function (userData) {
-  var card_id = getCardId();
+  var cardId = getCardId();
   var totalTaskTrackedTime = 0;
   var timeEntryDescription;
   var currentTask = $('.card-detail-title-assist').innerText.trim();
-  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '')  + ' | ' + card_id;
+  currentTask = currentTask.replace(/\s\[(\d+)(min|h|d|wk)\]/, '')  + ' | ' + cardId;
 
   userData.tasks.forEach(function (task) {
-    if (currentTask.indexOf(task.name.replace(/\s\|\s(\d+)$/, "")) === 0) {
+    if (currentTask.indexOf(task.name) === 0) {
+    // if (currentTask.indexOf(task.name.replace(/\s\|\s(\d+)$/, "")) === 0) {
     //if (currentTask.match(task.name.replace(/\s\|\s(\d+)$/, "")) !== null) {
         totalTaskTrackedTime = task.tracked_seconds;
     }
