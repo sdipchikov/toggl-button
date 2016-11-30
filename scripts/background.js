@@ -382,7 +382,7 @@ var TogglButton = {
         responseData = JSON.parse(xhr.responseText);
         for (var property in responseData) {
             trelloBoardName = responseData[property].name.replace(/(\d+)\s\-\s/, '');
-            if (trelloBoardName == projectName) {
+            if (trelloBoardName.indexOf(projectName) !== -1 || projectName.indexOf(trelloBoardName) !== -1) {
               trelloBoardId = responseData[property].id;
               break;
             }
