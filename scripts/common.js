@@ -2,6 +2,8 @@
 /*global document: false, MutationObserver: false, chrome: false*/
 "use strict";
 
+var isStarted = false;
+
 function $(s, elem) {
   elem = elem || document;
   return elem.querySelector(s);
@@ -33,7 +35,11 @@ function createLink(className, tagName, linkHref) {
     link.href = linkHref;
   }
 
-  link.appendChild(document.createTextNode('Start timer'));
+  if (isStarted) {
+    link.appendChild(document.createTextNode('Stop timer'));
+  } else {
+    link.appendChild(document.createTextNode('Start timer'));
+  }
   return link;
 }
 
@@ -42,6 +48,30 @@ function getCardId() {
   card_id = slug.substring(0, slug.indexOf('-'));
 
   return card_id;
+}
+
+function checkForActiveTimeEntry (callback) {
+  var xhr = new XMLHttpRequest();
+  var newApiUrl = "https://www.toggl.com/api/v8";
+  xhr.open("GET", newApiUrl + "/time_entries/current", true);
+
+  // handle response
+  xhr.addEventListener('load', function (e) {
+    if (xhr.status === 200) {
+      var responseData;
+      var cardId = getCardId();
+      var currentTask = $('.card-detail-title-assist').innerText.trim() + " | " + cardId;
+      responseData = JSON.parse(xhr.responseText);
+      if (responseData.data !== null) {
+        if (currentTask.match(responseData.data.description) !== null) {
+          callback(true);
+        }
+      }
+    } else {
+      alert(responseData);
+    }        
+  });
+  xhr.send(); 
 }
 
 function convertTime(time) {
@@ -64,6 +94,7 @@ function invokeIfFunction(trial) {
 var togglbutton = {
   isStarted: false,
   user: false,
+  label: 'Start timer',
   render: function (selector, opts, renderer) {
     chrome.extension.sendMessage({type: 'activate'}, function (response) {
       if (response.success) {
@@ -132,7 +163,7 @@ var togglbutton = {
         alert('Please select a workspace from the dropdown in the board header and try again.')
       }
       else {
-        if (this.isStarted) {
+        if (isStarted) {
           link.classList.remove('active');
           linkText = 'Start timer';
           opts = {type: 'stop'};
@@ -152,7 +183,7 @@ var togglbutton = {
           };
         }
         chrome.extension.sendMessage(opts);
-        this.isStarted = !this.isStarted;
+        isStarted = !isStarted;
         link.style.color = color;
         if (params.buttonType !== 'minimal') {
           link.innerHTML = linkText;
@@ -163,7 +194,12 @@ var togglbutton = {
     });
 
     // new button created - reset state
-    this.isStarted = false;
+    checkForActiveTimeEntry(function (active) {
+      if (active) {
+        isStarted = true;
+      }
+    });
+    
     return link;
   },
 
