@@ -368,7 +368,8 @@ var TogglButton = {
   },
 
   getTrelloBoardId: function (projectName, callback) {
-    projectName = projectName.replace(/(\d+)\s\-\s/, '');
+    projectName = projectName.replace(/\s/g,'').toLowerCase();
+    projectName = projectName.replace(/^\d+-/, '');
     var xhr = new XMLHttpRequest();
 
     xhr.open("GET", TogglButton.$trelloApiUrl + "/organizations/" + TogglButton.$trelloDesparkId + "/boards?key=" + TogglButton.$trelloApiKey + "&token=" + TogglButton.$trelloAuthToken, true);
@@ -381,7 +382,8 @@ var TogglButton = {
             trelloBoardId;
         responseData = JSON.parse(xhr.responseText);
         for (var property in responseData) {
-            trelloBoardName = responseData[property].name.replace(/(\d+)\s\-\s/, '');
+            trelloBoardName = responseData[property].name.replace(/\s/g,'').toLowerCase();
+            trelloBoardName = trelloBoardName.replace(/^\d+-/, '');
             if (trelloBoardName.indexOf(projectName) !== -1 || projectName.indexOf(trelloBoardName) !== -1) {
               trelloBoardId = responseData[property].id;
               break;
