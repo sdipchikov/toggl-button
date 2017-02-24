@@ -25,6 +25,7 @@ function createTag(name, className, innerHTML, nameParam) {
 
 function createLink(className, tagName, linkHref) {
   var link;
+  var label;
 
   // Param defaults
   tagName  = tagName  || 'a';
@@ -35,11 +36,14 @@ function createLink(className, tagName, linkHref) {
     link.href = linkHref;
   }
 
+
   if (isStarted) {
-    link.appendChild(document.createTextNode('Stop timer'));
+    label = 'Stop timer';
   } else {
-    link.appendChild(document.createTextNode('Start timer'));
+    label = 'Start timer';
   }
+
+  link.appendChild(document.createTextNode(label));
   return link;
 }
 
@@ -68,7 +72,7 @@ function checkForActiveTimeEntry (callback) {
         }
       }
     } else {
-      alert(responseData);
+      alert('Cannot get if there is an active time entry');
     }        
   });
   xhr.send(); 
