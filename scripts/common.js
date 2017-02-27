@@ -255,6 +255,8 @@ var createOption = function (id, cid, clientName, projectName, workspaceName, se
 var createProjectSelect = function (userData, className, nameParam) {
   var clients, projectLabel, option, select = createTag('select', className, false, nameParam);
   var currentBoardName = $('.board-header > a').innerText.trim();
+  currentBoardName = currentBoardName.replace(/\s/g,'').toLowerCase();
+  currentBoardName = currentBoardName.replace(/^\d+-/, '');
 
   //add  an empty (default) option
   select.appendChild(createOption("default", null, false, "-= Select a toggl project =-"));
@@ -263,9 +265,11 @@ var createProjectSelect = function (userData, className, nameParam) {
     clients = userData.clients.filter(function (elem, index, array) { return (elem.id === project.cid); });
     var projectLabel = project.name;
     var projectLabelTrimmed = project.name.trim();
-
+    projectLabelTrimmed = projectLabelTrimmed.replace(/\s/g,'').toLowerCase();
+    projectLabelTrimmed = projectLabelTrimmed.replace(/^\d+-/, '');
+    
     var selected = false;
-    if (projectLabelTrimmed == currentBoardName)
+    if (projectLabelTrimmed.indexOf(currentBoardName) !== -1)
       selected = true;
 
     select.appendChild(createOption(project.id, project.cid, (clients[0] !== undefined && clients[0].name != '' ? clients[0].name : false), projectLabel, false, selected));
