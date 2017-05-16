@@ -240,7 +240,7 @@ var TogglButton = {
           TogglButton.$curTaskId = taskId;
           callback(TogglButton.$curTaskId);
         } else {
-          alert('Cannot create new Toggl task!');
+          alert('Cannot create new Toggl task! Please check your settings!');
         }
       });
       xhr.send(JSON.stringify(entry)); 
@@ -259,7 +259,7 @@ var TogglButton = {
         responseData = JSON.parse(xhr.responseText);
         callback(responseData);
       } else {
-        alert('Cannot get Toggl Task!');
+        alert('Cannot get Toggl Task! Please check your settings!');
       }        
     });
     xhr.send(); 
@@ -285,7 +285,7 @@ var TogglButton = {
           }
           callback(task);
         } else {
-          alert('Cannot check if the task exists in Toggl!');
+          alert('Cannot check if the task exists in Toggl! Please check your settings!');
         }        
       });
       xhr.send(); 
@@ -391,7 +391,7 @@ var TogglButton = {
         }
         callback(trelloBoardId);
       } else {
-        alert('Cannot get Trello Board!');
+        alert('Cannot get Trello Board! Please check your settings!');
       }        
     });
     xhr.send(); 
@@ -419,7 +419,7 @@ getTrelloCardId: function (trelloBoardId, description, callback) {
       }
       callback(trelloCardId);
     } else {
-      alert('Cannot get Trello Card!');
+      alert('Cannot get Trello Card! Please check your settings!');
     }        
   });
   xhr.send(); 

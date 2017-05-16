@@ -72,7 +72,7 @@ function checkForActiveTimeEntry (callback) {
         }
       }
     } else {
-      alert('Cannot get if there is an active time entry');
+      alert('Cannot get if there is an active time entry! Please check if you are signed in Toggl!');
     }        
   });
   xhr.send(); 
