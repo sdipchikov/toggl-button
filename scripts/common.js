@@ -264,9 +264,7 @@ var createProjectSelect = function (userData, className, nameParam) {
   userData.projects.forEach(function (project) {
     clients = userData.clients.filter(function (elem, index, array) { return (elem.id === project.cid); });
     var projectLabel = project.name;
-    var projectLabelTrimmed = project.name.trim();
-    projectLabelTrimmed = projectLabelTrimmed.replace(/\s/g,'').toLowerCase();
-    projectLabelTrimmed = projectLabelTrimmed.replace(/^\d+-/, '');
+    var projectLabelTrimmed = project.name.trim().replace(/(^\d+\s\-\s|\s)/g,'').toLowerCase();
     
     var selected = false;
     if (projectLabelTrimmed.indexOf(currentBoardName) !== -1)
