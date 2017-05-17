@@ -82,17 +82,18 @@ togglbutton.render('.checklist-item-details:not(.toggl)', {observe: true}, funct
       tags.push('bugfix');
     }
   }
+  
+  //TODO
+  // link = togglbutton.createTimerLink({
+  //   className: 'trello',
+  //   buttonType: 'minimal',
+  //   projectName: '',
+  //   description: titleElem.innerText + ' - ' + taskElem.innerText + ' | ' + card_id,
+  //   tags: tags,
+  //   cardId: card_id,
+  // });
 
-  link = togglbutton.createTimerLink({
-    className: 'trello',
-    buttonType: 'minimal',
-    projectName: '',
-    description: titleElem.innerText + ' - ' + taskElem.innerText + ' | ' + card_id,
-    tags: tags,
-    cardId: card_id,
-  });
-
-  link.classList.add('checklist-item-button');
-  elem.parentNode.appendChild(link);
+  // link.classList.add('checklist-item-button');
+  // elem.parentNode.appendChild(link);
 });
 
