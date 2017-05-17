@@ -254,9 +254,7 @@ var createOption = function (id, cid, clientName, projectName, workspaceName, se
 
 var createProjectSelect = function (userData, className, nameParam) {
   var clients, projectLabel, option, select = createTag('select', className, false, nameParam);
-  var currentBoardName = $('.board-header > a').innerText.trim();
-  currentBoardName = currentBoardName.replace(/\s/g,'').toLowerCase();
-  currentBoardName = currentBoardName.replace(/^\d+-/, '');
+  var currentBoardName = $('.board-header > a').innerText.trim().replace(/(^\d+\s\-\s|\s)/g,'').toLowerCase();;
 
   //add  an empty (default) option
   select.appendChild(createOption("default", null, false, "-= Select a toggl project =-"));
